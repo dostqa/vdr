@@ -20,9 +20,9 @@ onMounted(() => {
 
   wave = WaveSurfer.create({
     container: container.value,
-    waveColor: '#cbd5e1',
-    progressColor: '#3b82f6',
-    cursorColor: '#1e293b',
+    waveColor: 'var(--wave-color, #cbd5e1)',
+    progressColor: 'var(--progress-color, #3b82f6)',
+    cursorColor: 'var(--text-primary, #1e293b)',
     barWidth: 3,
     barGap: 3,
     barRadius: 4,
@@ -65,14 +65,3 @@ defineExpose({
   isPlaying
 })
 </script>
-
-<style scoped>
-.wave {
-  width: 100%;
-  cursor: pointer;
-}
-
-.wave :deep(wave) {
-  border-radius: 40px;
-}
-</style>
