@@ -45,6 +45,10 @@
     max-width: 800px;
 }
 
+.anonblockaudio {
+    margin-top: 15px;
+}
+
 /* ========== Типография ========== */
 .title {
   font-size: 32px;
@@ -62,6 +66,17 @@
   font-family: system-ui, -apple-system, 'Inter', sans-serif;
 }
 
+.anotation {
+    margin-left: 100px;
+   text-align: left;
+  width: 100%;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+  font-family: system-ui, -apple-system, 'Inter', sans-serif;
+}
+
 /* ========== Аудио блок ========== */
 .audio-block {
   display: flex;
@@ -75,6 +90,8 @@
   border: 1px solid var(--border-light);
   transition: var(--transition);
   margin: 0 auto;
+  min-height: 90px;
+  margin-bottom: 20px;
 }
 
 .audio-block:hover {
@@ -140,6 +157,10 @@
 .wave {
   width: 100%;
   cursor: pointer;
+}
+
+.logo {
+    max-width: 150px;
 }
 
 /* ========== Анимации ========== */

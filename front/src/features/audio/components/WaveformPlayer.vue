@@ -27,7 +27,6 @@ onMounted(() => {
     barGap: 3,
     barRadius: 4,
     height: 56,
-    responsive: true,
     normalize: true
   })
 
