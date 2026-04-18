@@ -1,15 +1,15 @@
 services:
-  web:
-    build: ./front
-    ports:
-      - 8088:8080
+  # web:
+  #   build: ./front
+  #   ports:
+  #     - 8088:8080
 
-  gopher:
-    build: ./gopher
-    depends_on:
-      - db
-    ports:
-      - 8080:8079
+   gopher:
+     build: ./gopher
+     depends_on:
+       - db
+     ports:
+       - 8080:8079
 
   minio:
     image: minio/minio
@@ -22,24 +22,24 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-    command: [ "server", "/data", "--console-address", ":9001" ]
+    command: ["server", "/data", "--console-address", ":9001"]
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   init-minio:
-      image: minio/mc
-      depends_on:
-        minio:
-          condition: service_healthy
-      entrypoint: >
-        /bin/sh -c "
-        /usr/bin/mc alias set dockerminio http://minio:9000 ${MINIO_ROOT_USER:-admin} ${MINIO_ROOT_PASSWORD:-adminpass};
-        /usr/bin/mc mb dockerminio/bucket || true;
-        exit 0;
-        "
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set dockerminio http://minio:9000 ${MINIO_ROOT_USER:-admin} ${MINIO_ROOT_PASSWORD:-adminpass};
+      /usr/bin/mc mb dockerminio/bucket || true;
+      exit 0;
+      "
 
   db:
     image: postgres:16
@@ -55,12 +55,12 @@ services:
       - migrations:/migrations
 
   admin:
-      image: adminer
-      restart: always
-      depends_on:
-        - db
-      ports:
-        - 8081:8080
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 8081:8080
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.0.1
@@ -72,34 +72,34 @@ services:
       - zookeeper_data:/var/lib/zookeeper/data
 
   broker:
-      image: confluentinc/cp-kafka:7.0.1
-      container_name: broker
-      ports:
-        # To learn about configuring Kafka for access across networks see
-        # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
-        - "9092:9092"
-        - "9093:9093"
-      depends_on:
-        - zookeeper
-      volumes:
-        - kafka_data:/var/lib/kafka/data
-      environment:
-        KAFKA_BROKER_ID: 1
-        KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-        KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-        KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-        KAFKA_LISTENERS: PLAINTEXT_INTERNAL://0.0.0.0:29092,PLAINTEXT_C://0.0.0.0:9093,PLAINTEXT_L://0.0.0.0:9092,
-        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://broker:29092,PLAINTEXT_L://localhost:9092,PLAINTEXT_C://broker:9093
-        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_L:PLAINTEXT,PLAINTEXT_C:PLAINTEXT
-        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: broker
+    ports:
+      # To learn about configuring Kafka for access across networks see
+      # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+      - "9092:9092"
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://0.0.0.0:29092,PLAINTEXT_C://0.0.0.0:9093,PLAINTEXT_L://0.0.0.0:9092,
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://broker:29092,PLAINTEXT_L://localhost:9092,PLAINTEXT_C://broker:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_L:PLAINTEXT,PLAINTEXT_C:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
 
   init-kafka:
     image: confluentinc/cp-kafka:7.0.1
     container_name: init-kafka
     depends_on:
       - broker
-    entrypoint: [ "/bin/sh", "-c" ]
+    entrypoint: ["/bin/sh", "-c"]
     command: |
       "
       echo 'Waiting for Kafka...'
@@ -118,17 +118,17 @@ services:
       "
 
   kafka-ui:
-      image: provectuslabs/kafka-ui
-      container_name: kafka-ui
-      depends_on:
-        - broker
-      ports:
-        - "7777:8080"
-      restart: always
-      environment:
-        - KAFKA_CLUSTERS_0_NAME=broker
-        - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=broker:9093
-        - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    depends_on:
+      - broker
+    ports:
+      - "7777:8080"
+    restart: always
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=broker
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=broker:9093
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
 volumes:
   data-minio:
   postgres_data:

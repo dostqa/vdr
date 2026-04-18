@@ -3,9 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"gopher/internal/clients"
 	"gopher/internal/models"
 	"io"
 	"strconv"
+
+	"github.com/segmentio/kafka-go"
 )
 
 type TransactionManager interface {
@@ -21,16 +24,23 @@ type FileStorage interface {
 	SaveFile(context.Context, string, io.Reader, int64) error
 }
 
+type KafkaService interface {
+	SendJSON(ctx context.Context, topic string, key string, data interface{}) error
+	StartConsume(ctx context.Context, topic, groupID string, handler func(kafka.Message))
+}
+
 type SaverService struct {
 	MetaDataBase MetaDataBase
 	FileStorage  FileStorage
+	KafkaService KafkaService
 	trm          TransactionManager
 }
 
-func NewSaverService(metaDataBase MetaDataBase, fileStorage FileStorage, trm TransactionManager) *SaverService {
+func NewSaverService(metaDataBase MetaDataBase, fileStorage FileStorage, kafkaService KafkaService, trm TransactionManager) *SaverService {
 	return &SaverService{
 		MetaDataBase: metaDataBase,
 		FileStorage:  fileStorage,
+		KafkaService: kafkaService,
 		trm:          trm,
 	}
 }
@@ -55,6 +65,17 @@ func (s *SaverService) Save(ctx context.Context, file models.File, r io.Reader, 
 
 		// 1.3 Сохраняем мета информацию файла
 		_, err = s.MetaDataBase.SaveFile(ctx, requestID, file.FileName)
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		msg := clients.InputMessage{
+			RequestID: int(requestID),
+			FilePath:  file.FileName,
+		}
+
+		// 1.4 Отправка event на обработку
+		err = s.KafkaService.SendJSON(ctx, "input_topic", strconv.Itoa(int(requestID)), msg)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gopher/internal/clients"
 	"gopher/internal/config"
 	"gopher/internal/handlers"
 	"gopher/internal/logger"
@@ -49,7 +50,9 @@ func main() {
 	router.Get("/api/audiofiles/requests/{id}", handlers.GetByRequestID(log, dataBase))
 	// router.Get("/api/audiofiles/files/{filepath}", handlers.GetByFilePath)
 
-	saverService := service.NewSaverService(dataBase, fileStorage, database.NewTransactionManager(pool))
+	kafkaService := clients.NewKafkaService([]string{"localhost:9092"})
+	defer kafkaService.Close()
+	saverService := service.NewSaverService(dataBase, fileStorage, kafkaService, database.NewTransactionManager(pool))
 	router.Post("/api/audiofiles", handlers.Post(log, saverService))
 
 	server := httpserver.NewHTTPServer(
