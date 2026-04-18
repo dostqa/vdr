@@ -3,13 +3,22 @@ import AudioRecorder from '../features/audio/components/AudioRecorder.vue'
 import ProcessedAudioBlock from '../features/audio/components/ProcessedAudioBlock.vue'
 import { ref } from 'vue'
 
-const processedAudio = ref<string | null>(null)
+import TranscriptionBlock from '../features/audio/components/TranscriptionBlock.vue'
+import { mockResponse } from '../features/audio/services/mockTranscription'
+
+const transcription = ref(null)
 
 const onRecorded = (url: string) => {
   setTimeout(() => {
     processedAudio.value = url
+
+    // имитация ответа бэка
+    transcription.value = mockResponse
   }, 1000)
 }
+
+const processedAudio = ref<string | null>(null)
+
 </script>
 
 <template>
@@ -22,8 +31,11 @@ const onRecorded = (url: string) => {
 
       <ProcessedAudioBlock
         :audioUrl="processedAudio"
+        :objects="transcription?.objects_pdns"
         style="margin-top: 20px;"
       />
+
+      <TranscriptionBlock :data="transcription" />
     </div>
   </div>
 </template>

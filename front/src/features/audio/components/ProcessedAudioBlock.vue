@@ -9,13 +9,11 @@ import downloadIcon from '/src/assets/icons/download.png'
 
 const props = defineProps<{
   audioUrl: string | null
+  objects?: {
+    start_time: number
+    end_time: number
+  }[]
 }>()
-
-// заглушка интервалов (секунды)
-const intervals = ref([
-  { start: 1, end: 2.5 },
-  { start: 4, end: 6 }
-])
 
 const container = ref<HTMLDivElement | null>(null)
 let wave: WaveSurfer | null = null
@@ -52,22 +50,23 @@ onMounted(() => {
   })
 })
 
-watch(() => props.audioUrl, (url) => {
-  if (wave && url) {
-    wave.load(url)
-    isPlaying.value = false
+watch(
+  () => props.objects,
+  () => {
+    addRegions()
   }
-})
+)
 
 const addRegions = () => {
+  if (!regions || !props.objects) return
+
   regions.clearRegions()
 
-  intervals.value.forEach(i => {
+  props.objects.forEach(obj => {
     regions.addRegion({
-      start: i.start,
-      end: i.end,
+      start: obj.start_time,
+      end: obj.end_time,
       color: 'rgba(0,255,0,0.2)',
-
       drag: false,
       resize: false
     })
@@ -91,6 +90,7 @@ const downloadAudio = () => {
 </script>
 
 <template>
+    
     <p class="anotation">Анонимный</p>
   <div class="audio-block">
     <!-- play -->
