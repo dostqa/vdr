@@ -6,7 +6,8 @@ import (
 	"gopher/internal/logger"
 	"gopher/internal/logger/logutils"
 	"gopher/internal/servers/httpserver"
-	"gopher/internal/storage"
+	"gopher/internal/storages/database"
+	"gopher/internal/storages/filestorage"
 	stdlog "log"
 
 	"github.com/go-chi/chi/middleware"
@@ -14,20 +15,27 @@ import (
 )
 
 func main() {
-	config, err := config.NewConfigFromFile("./configs/config.yaml")
+	cfg, err := config.NewConfigFromFile("./configs/config.yaml")
 	if err != nil {
 		stdlog.Fatalf("%v", err)
 	}
 
-	log := logger.NewLogger(config.Env)
-
-	storage, err := storage.NewStorage(config.StoragePath)
+	fileStorage, err := filestorage.NewFileStorage(
+		cfg.FileStorage.Address,
+		cfg.FileStorage.Username,
+		cfg.FileStorage.Password,
+		cfg.FileStorage.BucketName,
+	)
 	if err != nil {
-		log.Error("failed to initialize storage", logutils.Err(err))
+		stdlog.Fatalf("%v", err)
 	}
-	_ = storage
-	// err = storage.SaveNewAudioFile(1)
-	// fmt.Println(err)
+
+	dataBase, err := database.NewDataBaseWithConfig(cfg)
+	if err != nil {
+		stdlog.Fatalf("%v", err)
+	}
+
+	log := logger.NewLogger(cfg.Env)
 
 	router := chi.NewRouter()
 
@@ -35,14 +43,14 @@ func main() {
 	router.Use(logger.NewMiddlewareLogger(log))
 	router.Use(middleware.Recoverer)
 
-	router.Post("/api/audiofiles", handlers.Post(log, storage))
+	router.Post("/api/audiofiles", handlers.Post(log, dataBase, fileStorage))
 
 	server := httpserver.NewHTTPServer(
-		config.Address,
+		cfg.Address,
 		router,
-		config.Timeout,
-		config.Timeout,
-		config.IdleTimeout,
+		cfg.Timeout,
+		cfg.Timeout,
+		cfg.IdleTimeout,
 	)
 
 	log.Info("starting server")

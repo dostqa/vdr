@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"gopher/internal/logger/logutils"
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/middleware"
@@ -13,34 +15,22 @@ import (
 
 const maxUploadSize = 10 << 20 // 10 MB
 
-type Response struct {
-	Message string `json:"message"`
+type FileSaver interface {
+	SaveFile(context.Context, string, io.Reader, int64) (string, error)
 }
 
-func newOK() Response {
-	return Response{
-		Message: "OK",
-	}
+type MetaDataSaver interface {
+	SaveRequest(context.Context) (int64, error)
+	SaveFile(context.Context, int64, string) (int64, error)
 }
 
-func newError(message string) Response {
-	return Response{
-		Message: message,
-	}
-}
-
-type Saver interface {
-	SaveNewAudioFile(string, string, io.Reader) error
-}
-
-func Post(logger *slog.Logger, saver Saver) http.HandlerFunc {
+func Post(logger *slog.Logger, metaDataSaver MetaDataSaver, fileSaver FileSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.Post"
-		id := middleware.GetReqID(r.Context())
 
 		log := logger.With(
 			slog.String("op", op),
-			slog.String("request_id", id),
+			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
 		// 1. Парсим multipart form
@@ -72,12 +62,34 @@ func Post(logger *slog.Logger, saver Saver) http.HandlerFunc {
 		}
 		defer file.Close()
 
-		if err := saver.SaveNewAudioFile(id, header.Filename, file); err != nil {
+		// 3. Сохраняем нужную информацию
+		// 3.1 Сохраняем request
+		id, err := metaDataSaver.SaveRequest(r.Context())
+		if err != nil {
+			log.Error("failed to create request", logutils.Err(err))
+
+			render.Status(r, http.StatusInternalServerError)
+			render.JSON(w, r, newError("Internal server error"))
+			return
+		}
+
+		// 3.2 Сохраняем файл в S3 хранилище
+		filepath, err := fileSaver.SaveFile(r.Context(), strconv.FormatInt(id, 10)+"_"+header.Filename, file, header.Size)
+		if err != nil {
 			log.Error("failed to save file", logutils.Err(err))
 
 			render.Status(r, http.StatusInternalServerError)
 			render.JSON(w, r, newError("Internal server error"))
 			return
+		}
+
+		// 3.3 сохраняем файл в postgress
+		_, err = metaDataSaver.SaveFile(r.Context(), id, filepath)
+		if err != nil {
+			log.Error("failed to create file", logutils.Err(err))
+
+			render.Status(r, http.StatusInternalServerError)
+			render.JSON(w, r, newError("Internal server error"))
 		}
 
 		log.Info("audiofile saved successfully")
