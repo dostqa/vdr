@@ -1,4 +1,7 @@
 services:
+  web:
+    build: ./front
+
   minio:
     image: minio/minio
     container_name: 3dom-minio
