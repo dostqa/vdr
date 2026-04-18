@@ -1,93 +1,83 @@
 package handlers
 
 import (
+	"context"
 	"gopher/internal/logger/logutils"
 	"gopher/internal/models"
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
 )
 
-type Error struct {
-	Message string `json:"message"`
+const maxUploadSize = 10 << 20 // 10 MB
+
+type SaverService interface {
+	Save(context.Context, models.File, io.Reader, int64) error
 }
 
-type Response struct {
-	Error *Error `json:"error,omitempty"`
+type MetaDataSaver interface {
+	SaveRequest(context.Context) (int64, error)
+	SaveFile(context.Context, int64, string) (int64, error)
 }
 
-func newOK() Response {
-	return Response{}
-}
-
-func newError(message string) Response {
-	return Response{
-		Error: &Error{
-			Message: message,
-		},
-	}
-}
-
-type Saver interface {
-	SaveNewAudioFile(models.AudioFile) error
-}
-
-func Post(logger *slog.Logger, saver Saver) http.HandlerFunc {
+func Post(logger *slog.Logger, saverService SaverService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.Post"
-		id := middleware.GetReqID(r.Context())
 
 		log := logger.With(
 			slog.String("op", op),
-			slog.String("request_id", id),
+			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
 		// 1. Парсим multipart form
-		if err := r.ParseMultipartForm(10 << 20); err != nil {
+		r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize) // ограничение на размер файла
+		if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 			log.Error("failed to parse form", logutils.Err(err))
 
-			render.Status(r, http.StatusInternalServerError)
-			render.JSON(w, r, newError("Internal server error"))
+			// превысили лимит
+			if strings.Contains(err.Error(), "request body too large") {
+				render.Status(r, http.StatusRequestEntityTooLarge)
+				render.JSON(w, r, newError("file too large"))
+				return
+			}
 
+			// что-то ещё пошло не так
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, newError("invalid multipart form"))
 			return
 		}
 
 		// 2. Достаём файл из формы (ключ "file")
 		file, header, err := r.FormFile("file")
 		if err != nil {
-			log.Error("failed to form file", logutils.Err(err))
+			log.Error("failed to get file from form", logutils.Err(err))
 
-			render.Status(r, http.StatusInternalServerError)
-			render.JSON(w, r, newError("Internal server error"))
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, newError("file is required"))
 			return
 		}
 		defer file.Close()
 
-		// 3. Читаем в память (для больших файлов лучше стримить)
-		data, err := io.ReadAll(file)
+		err = saverService.Save(
+			r.Context(),
+			models.File{FileName: header.Filename},
+			file,
+			header.Size,
+		)
 		if err != nil {
-			log.Error("failed to read file", logutils.Err(err))
-
-			render.Status(r, http.StatusInternalServerError)
-			render.JSON(w, r, newError("Internal server error"))
-			return
-		}
-
-		audioFile := models.NewAudioFile(id, header.Filename, data)
-
-		// 4. Сохраняем через абстракцию
-		if err := saver.SaveNewAudioFile(audioFile); err != nil {
 			log.Error("failed to save file", logutils.Err(err))
 
 			render.Status(r, http.StatusInternalServerError)
-			render.JSON(w, r, newError("Internal server error"))
+			render.JSON(w, r, newError("internal server error"))
 			return
 		}
 
-		log.Info("audiofile saved successfully")
+		log.Info("file saved successfully")
 		render.Status(r, http.StatusCreated)
+		render.JSON(w, r, newOK())
 	}
 }
