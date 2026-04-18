@@ -3,10 +3,10 @@ import AudioRecorder from '../features/audio/components/AudioRecorder.vue'
 import ProcessedAudioBlock from '../features/audio/components/ProcessedAudioBlock.vue'
 import { ref } from 'vue'
 
-import TranscriptionBlock from '../features/audio/components/TranscriptionBlock.vue'
+import type { TranscriptionResponse } from '../features/audio/types/transcription.types'
 import { mockResponse } from '../features/audio/services/mockTranscription'
 
-const transcription = ref(null)
+const transcription = ref<TranscriptionResponse | null>(null)
 
 const onRecorded = (url: string) => {
   setTimeout(() => {
