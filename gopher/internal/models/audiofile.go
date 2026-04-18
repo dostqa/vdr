@@ -1,15 +1,13 @@
 package models
 
 type AudioFile struct {
-	ID       string
+	ID       string `json:"-"`
 	Filename string `json:"filename"`
-	Data     []byte `json:"-"`
 }
 
-func NewAudioFile(id string, filename string, data []byte) AudioFile {
+func NewAudioFile(id string, filename string) AudioFile {
 	return AudioFile{
 		ID:       id,
 		Filename: filename,
-		Data:     data,
 	}
 }

@@ -45,19 +45,12 @@ func main() {
 		config.IdleTimeout,
 	)
 
+	log.Info("starting server")
 	if err := server.ListenAndServe(); err != nil {
 		log.Error("failed to run server", logutils.Err(err))
 	}
 
 	log.Error("server stopped")
-
-	// err = storage.SaveNewAudioFile(1)
-	// fmt.Println(err)
-	// err = storage.SaveNewAudioFile(2)
-	// fmt.Println(err)
-
-	// err = storage.Close()
-	// fmt.Println(err)
 }
 
 // 1. Необходимо получить аудиофайл с фронта
