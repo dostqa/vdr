@@ -5,7 +5,6 @@ go 1.26.1
 require (
 	github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2 v2.0.2
 	github.com/avito-tech/go-transaction-manager/trm/v2 v2.0.2
-	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/render v1.0.3
 	github.com/jackc/pgx/v5 v5.9.1

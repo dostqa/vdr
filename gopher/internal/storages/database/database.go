@@ -78,3 +78,21 @@ func (db *DataBase) SaveFile(ctx context.Context, requestID int64, filepath stri
 
 	return id, nil
 }
+
+func (db *DataBase) IsRequestReady(ctx context.Context, requestID int64) (bool, error) {
+	const op = "database.IsFileProcessed"
+
+	var isReady bool
+
+	err := db.db(ctx).QueryRow(ctx,
+		`SELECT status FROM requests
+	 	 WHERE id = $1`,
+		requestID,
+	).Scan(&isReady)
+
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return isReady, nil
+}

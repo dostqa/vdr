@@ -1,17 +1,15 @@
 package models
 
-import "time"
-
-type Request struct {
-	ID        int
-	Status    bool
-	CreatedAt time.Timer
-}
+// type Request struct {
+// 	ID        int
+// 	Status    bool
+// 	CreatedAt time.Timer
+// }
 
 type File struct {
 	ID        int
 	RequestID int
-	Filepath  string
+	FileName  string
 }
 
 type PDn struct {

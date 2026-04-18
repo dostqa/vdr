@@ -14,24 +14,24 @@ type FileStorage struct {
 	bucketname string
 }
 
-func (s *FileStorage) SaveFile(ctx context.Context, objectName string, r io.Reader, size int64) (string, error) {
+func (s *FileStorage) SaveFile(ctx context.Context, objectName string, r io.Reader, size int64) error {
 	const op = "minio.SaveFile"
 
 	_, err := s.PutObject(
 		ctx,
 		s.bucketname,
 		objectName,
-		r,    // <- твой io.Reader
-		size, // <- важно!
+		r,
+		size,
 		minio.PutObjectOptions{
 			ContentType: "audio/webm",
 		},
 	)
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	return s.bucketname + objectName, nil
+	return nil
 }
 
 func NewFileStorage(address, username, password, bucketname string) (*FileStorage, error) {

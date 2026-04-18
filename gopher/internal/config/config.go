@@ -32,7 +32,6 @@ type FileStorage struct {
 
 type Config struct {
 	Env         string      `yaml:"env"`
-	StoragePath string      `yaml:"storage_path"`
 	DataBase    DataBase    `yaml:"database"`
 	FileStorage FileStorage `yaml:"filebase"`
 	HTTPServer  `yaml:"http_server"`

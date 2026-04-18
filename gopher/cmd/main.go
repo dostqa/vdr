@@ -6,18 +6,19 @@ import (
 	"gopher/internal/logger"
 	"gopher/internal/logger/logutils"
 	"gopher/internal/servers/httpserver"
+	"gopher/internal/service"
 	"gopher/internal/storages/database"
 	"gopher/internal/storages/filestorage"
 	stdlog "log"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
 	cfg, err := config.NewConfigFromFile("./configs/config.yaml")
 	if err != nil {
-		stdlog.Fatalf("%v", err)
+		stdlog.Fatalf("%s: %v", "failed to load config", err)
 	}
 
 	fileStorage, err := filestorage.NewFileStorage(
@@ -30,20 +31,26 @@ func main() {
 		stdlog.Fatalf("%v", err)
 	}
 
-	dataBase, err := database.NewDataBaseWithConfig(cfg)
+	pool, err := database.InitDataBasePool(cfg)
 	if err != nil {
 		stdlog.Fatalf("%v", err)
 	}
+
+	dataBase := database.NewDataBase(pool)
 
 	log := logger.NewLogger(cfg.Env)
 
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
-	router.Use(logger.NewMiddlewareLogger(log))
+	// router.Use(logger.NewMiddlewareLogger(log))
 	router.Use(middleware.Recoverer)
 
-	router.Post("/api/audiofiles", handlers.Post(log, dataBase, fileStorage))
+	router.Get("/api/audiofiles/requests/{id}", handlers.GetByRequestID(log, dataBase))
+	// router.Get("/api/audiofiles/files/{filepath}", handlers.GetByFilePath)
+
+	saverService := service.NewSaverService(dataBase, fileStorage, database.NewTransactionManager(pool))
+	router.Post("/api/audiofiles", handlers.Post(log, saverService))
 
 	server := httpserver.NewHTTPServer(
 		cfg.Address,
