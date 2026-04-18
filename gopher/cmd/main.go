@@ -6,58 +6,66 @@ import (
 	"gopher/internal/logger"
 	"gopher/internal/logger/logutils"
 	"gopher/internal/servers/httpserver"
-	"gopher/internal/storage"
+	"gopher/internal/service"
+	"gopher/internal/storages/database"
+	"gopher/internal/storages/filestorage"
 	stdlog "log"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
-	config, err := config.NewConfigFromFile("./configs/config.yaml")
+	cfg, err := config.NewConfigFromFile("./configs/config.yaml")
+	if err != nil {
+		stdlog.Fatalf("%s: %v", "failed to load config", err)
+	}
+
+	fileStorage, err := filestorage.NewFileStorage(
+		cfg.FileStorage.Address,
+		cfg.FileStorage.Username,
+		cfg.FileStorage.Password,
+		cfg.FileStorage.BucketName,
+	)
 	if err != nil {
 		stdlog.Fatalf("%v", err)
 	}
 
-	log := logger.NewLogger(config.Env)
-
-	storage, err := storage.NewStorage(config.StoragePath)
+	pool, err := database.InitDataBasePool(cfg)
 	if err != nil {
-		log.Error("failed to initialize storage", logutils.Err(err))
+		stdlog.Fatalf("%v", err)
 	}
-	_ = storage
-	// err = storage.SaveNewAudioFile(1)
-	// fmt.Println(err)
+
+	dataBase := database.NewDataBase(pool)
+
+	log := logger.NewLogger(cfg.Env)
 
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
-	router.Use(logger.NewMiddlewareLogger(log))
+	// router.Use(logger.NewMiddlewareLogger(log))
 	router.Use(middleware.Recoverer)
 
-	router.Post("/api/audiofiles", handlers.Post(log, storage))
+	router.Get("/api/audiofiles/requests/{id}", handlers.GetByRequestID(log, dataBase))
+	// router.Get("/api/audiofiles/files/{filepath}", handlers.GetByFilePath)
+
+	saverService := service.NewSaverService(dataBase, fileStorage, database.NewTransactionManager(pool))
+	router.Post("/api/audiofiles", handlers.Post(log, saverService))
 
 	server := httpserver.NewHTTPServer(
-		config.Address,
+		cfg.Address,
 		router,
-		config.Timeout,
-		config.Timeout,
-		config.IdleTimeout,
+		cfg.Timeout,
+		cfg.Timeout,
+		cfg.IdleTimeout,
 	)
 
+	log.Info("starting server")
 	if err := server.ListenAndServe(); err != nil {
 		log.Error("failed to run server", logutils.Err(err))
 	}
 
 	log.Error("server stopped")
-
-	// err = storage.SaveNewAudioFile(1)
-	// fmt.Println(err)
-	// err = storage.SaveNewAudioFile(2)
-	// fmt.Println(err)
-
-	// err = storage.Close()
-	// fmt.Println(err)
 }
 
 // 1. Необходимо получить аудиофайл с фронта

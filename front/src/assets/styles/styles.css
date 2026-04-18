@@ -1,0 +1,217 @@
+/* ========== Базовые сбросы ========== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ========== Глобальные переменные ========== */
+:root {
+  --bg-primary: #f5f7fa;
+  --bg-secondary: #eef2f6;
+  --surface-white: #ffffff;
+  --border-light: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --button-bg: #f1f5f9;
+  --button-hover: #e2e8f0;
+  --progress-color: #3b82f6;
+  --wave-color: #cbd5e1;
+  --record-active: #ef4444;
+  --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --radius-sm: 8px;
+  --radius-md: 20px;
+  --radius-lg: 40px;
+  --radius-full: 48px;
+  --transition: all 0.2s ease;
+}
+
+/* ========== Страница ========== */
+.page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  padding: 20px;
+}
+
+/* ========== Контейнер ========== */
+.recorder-container {
+  text-align: center;
+  width: 90%;
+    max-width: 800px;
+}
+
+.anonblockaudio {
+    margin-top: 15px;
+}
+
+/* ========== Типография ========== */
+.title {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+  font-family: system-ui, -apple-system, 'Inter', sans-serif;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  font-family: system-ui, -apple-system, 'Inter', sans-serif;
+}
+
+.anotation {
+    margin-left: 100px;
+   text-align: left;
+  width: 100%;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+  font-family: system-ui, -apple-system, 'Inter', sans-serif;
+}
+
+/* ========== Аудио блок ========== */
+.audio-block {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface-white);
+  padding: 16px 24px;
+  border-radius: var(--radius-full);
+  width: 90%;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  transition: var(--transition);
+  margin: 0 auto;
+  min-height: 90px;
+  margin-bottom: 20px;
+}
+
+.audio-block:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
+}
+
+/* ========== Общие стили кнопок ========== */
+.control-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+  background: var(--button-bg);
+  color: var(--text-primary);
+}
+
+.control-btn:hover:not(:disabled) {
+  background: var(--button-hover);
+  transform: scale(1.05);
+}
+
+.control-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.control-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ========== Play кнопка ========== */
+.play-btn {
+  background: var(--button-bg);
+  color: var(--text-primary);
+}
+
+/* ========== Микрофон кнопка ========== */
+.mic-btn {
+  background: var(--button-bg);
+  color: var(--text-primary);
+  position: relative;
+}
+
+.mic-btn.active {
+  background: var(--record-active);
+  color: white;
+  animation: mic-pulse 1.5s infinite;
+}
+
+/* ========== Волна ========== */
+.wave-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.wave {
+  width: 100%;
+  cursor: pointer;
+}
+
+.logo {
+    max-width: 150px;
+}
+
+/* ========== Анимации ========== */
+@keyframes mic-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+/* ========== Адаптивность ========== */
+@media (max-width: 640px) {
+  .audio-block {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  
+  .control-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .subtitle {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .audio-block {
+    flex-wrap: wrap;
+    border-radius: var(--radius-md);
+    justify-content: center;
+  }
+  
+  .wave-container {
+    min-width: 200px;
+    order: 1;
+    width: 100%;
+  }
+  
+  .play-btn {
+    order: 0;
+  }
+  
+  .mic-btn {
+    order: 2;
+  }
+}
