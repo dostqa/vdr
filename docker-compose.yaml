@@ -28,5 +28,28 @@ services:
         /usr/bin/mc mb dockerminio/bucket || true;
         exit 0;
         "
+
+  db:
+    image: postgres:16
+    container_name: db
+    environment:
+      POSTGRES_USER: ${DB_USER:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin}
+      POSTGRES_DB: ${DB_NAME:-db}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - migrations:/migrations
+
+  admin:
+      image: adminer
+      restart: always
+      depends_on:
+        - db
+      ports:
+        - 8081:8080
 volumes:
   data-minio:
+  postgres_data:
+  migrations:
