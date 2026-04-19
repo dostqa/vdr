@@ -11,6 +11,11 @@ services:
      ports:
        - 8080:8079
 
+  snaker:
+    build: ./snaker
+    depends_on:
+      - broker
+
   minio:
     image: minio/minio
     container_name: 3dom-minio
