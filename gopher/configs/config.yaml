@@ -1,17 +1,19 @@
-env: "local" # возможные значения: local, dev, prod 
+env: "local"
 http_server:
-  address: ":8079"
+  address: ":8080"
   timeout: 4s
   idle_timeout: 60s
 database: #sql
   name: "db"
-  host: "db"
+  host: "localhost"
   port: "5432"
   username: "admin"
   password: "admin"
   migration_path: "migrations"
-filebase: #MinIO
-  address: "3dom-minio:9000"
+filestorage: #MinIO
+  address: "localhost:9000"
   username: "admin"
   password: "adminpass"
   bucketname: "bucket"
+kafka:
+  address: "localhost:9092"

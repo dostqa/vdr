@@ -1,0 +1,19 @@
+env: "local"
+http_server:
+  address: ":8079"
+  timeout: 4s
+  idle_timeout: 60s
+database: #sql
+  name: "db"
+  host: "db"
+  port: "5432"
+  username: "admin"
+  password: "admin"
+  migration_path: "migrations"
+filestorage: #MinIO
+  address: "3dom-minio:9000"
+  username: "admin"
+  password: "adminpass"
+  bucketname: "bucket"
+kafka:
+  address: "broker:9093"

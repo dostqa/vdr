@@ -2,10 +2,10 @@ package config
 
 import (
 	"fmt"
-	"os"
+	"log"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type HTTPServer struct {
@@ -14,13 +14,13 @@ type HTTPServer struct {
 	IdleTimeout time.Duration `yaml:"idle_timeout"`
 }
 
-type DataBase struct {
-	Name           string `yaml:"name" env:"DB_NAME" env-default:"db"`
-	Host           string `yaml:"host" env:"DB_HOST" env-default:"db"`
-	Port           string `yaml:"port" env:"DB_PORT" env-default:"5432"`
-	Username       string `yaml:"username" env:"DB_USER" env-default:"admin"`
-	Password       string `yaml:"password" env:"DB_PASSWORD" env-default:"admin"`
-	MigrationsPath string `yaml:"migration_path" env:"MIGRATION_PATH" env-default:"migrations"`
+type Database struct {
+	Name           string `yaml:"name"`
+	Host           string `yaml:"host"`
+	Port           string `yaml:"port"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	MigrationsPath string `yaml:"migration_path"`
 }
 
 type FileStorage struct {
@@ -30,30 +30,28 @@ type FileStorage struct {
 	BucketName string `yaml:"bucketname"`
 }
 
+type Kafka struct {
+	Address string `yaml:"address"`
+}
+
 type Config struct {
 	Env         string      `yaml:"env"`
-	DataBase    DataBase    `yaml:"database"`
-	FileStorage FileStorage `yaml:"filebase"`
-	HTTPServer  `yaml:"http_server"`
+	Database    Database    `yaml:"database"`
+	FileStorage FileStorage `yaml:"filestorage"`
+	Kafka       Kafka       `yaml:"kafka"`
+	HTTPServer  HTTPServer  `yaml:"http_server"`
 }
 
-func (cfg Config) DataBaseURL() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", cfg.DataBase.Username, cfg.DataBase.Password, cfg.DataBase.Host, cfg.DataBase.Port, cfg.DataBase.Name)
+func (cfg Config) DatabaseURL() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s", cfg.Database.Username, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
 }
 
-func NewConfigFromFile(path string) (*Config, error) {
-	const op = "config.NewConfigFromFile"
+func MustLoad(filename string) Config {
+	var cfg Config
 
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+	if err := cleanenv.ReadConfig(fmt.Sprintf("./configs/%s", filename), &cfg); err != nil {
+		log.Fatal("cannot read config: " + err.Error())
 	}
 
-	config := &Config{}
-	err = yaml.Unmarshal(data, config)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
-	return config, nil
+	return cfg
 }
