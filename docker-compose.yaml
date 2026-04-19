@@ -6,6 +6,7 @@ services:
 
   gopher:
     build: ./gopher
+    container_name: 3dom-ghoper
     depends_on:
       - db
     ports:
