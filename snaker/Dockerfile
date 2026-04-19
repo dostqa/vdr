@@ -10,7 +10,7 @@ RUN apt-get update && \
 COPY requirements.txt .
 
 # Устанавливаем библиотеки
-RUN pip install pydantic confluent_kafka minio loguru pydub ollama rapidfuzz faster_whisper
+RUN pip install pydantic confluent_kafka minio loguru pydub ollama rapidfuzz faster_whisper natasha
 
 # Копируем все остальные файлы проекта
 COPY . ./snaker
