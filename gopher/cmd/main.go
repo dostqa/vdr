@@ -80,15 +80,6 @@ func main() {
 		// Стриммим содержимое напрямую из Minio в ответ пользователю
 		io.Copy(w, fileStream)
 	})
-	router.Use(cors.Handler(cors.Options{
-		// AllowedOrigins: []string{"https://foo.com"} // Для продакшена лучше указывать конкретные домены
-		AllowedOrigins:   []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300, // Кэширование префлайт-запросов в секундах
-	}))
 
 	router.Get("/api/audiofiles/requests/{id}", handlers.GetByRequestID(log, dataBase, saverService))
 	// router.Get("/api/audiofiles/files/{filepath}", handlers.GetByFilePath)
