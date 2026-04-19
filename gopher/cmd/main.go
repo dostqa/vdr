@@ -11,7 +11,10 @@ import (
 	"gopher/internal/service"
 	"gopher/internal/storages/database"
 	"gopher/internal/storages/filestorage"
+	"io"
 	stdlog "log"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 )
@@ -49,18 +52,43 @@ func main() {
 
 	router := chi.NewRouter()
 	router.Use(cors.Handler(cors.Options{
-				// AllowedOrigins: []string{"https://foo.com"} // Для продакшена лучше указывать конкретные домены
-						AllowedOrigins:   []string{"https://*", "http://*"},
-								AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
-										AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-												ExposedHeaders:   []string{"Link"},
-														AllowCredentials: true,
-																MaxAge:           300, // Кэширование префлайт-запросов в секундах
-																	}))
+		// AllowedOrigins: []string{"https://foo.com"} // Для продакшена лучше указывать конкретные домены
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Кэширование префлайт-запросов в секундах
+	}))
 	//router.Use(middleware.RequestID)
 
 	// router.Use(logger.NewMiddlewareLogger(log))
 	//router.Use(middleware.Recoverer)
+	router.Get("/audio/{name}", func(w http.ResponseWriter, r *http.Request) {
+		name := chi.URLParam(r, "name")
+
+		// Вызываем нашу новую функцию
+		fileStream, err := fileStorage.GetFile(r.Context(), name)
+		if err != nil {
+			http.Error(w, "File not found", http.StatusNotFound)
+			return
+		}
+		defer fileStream.Close() // Обязательно закрываем поток!
+
+		w.Header().Set("Content-Type", "audio/webm")
+
+		// Стриммим содержимое напрямую из Minio в ответ пользователю
+		io.Copy(w, fileStream)
+	})
+	router.Use(cors.Handler(cors.Options{
+		// AllowedOrigins: []string{"https://foo.com"} // Для продакшена лучше указывать конкретные домены
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Кэширование префлайт-запросов в секундах
+	}))
 
 	router.Get("/api/audiofiles/requests/{id}", handlers.GetByRequestID(log, dataBase, saverService))
 	// router.Get("/api/audiofiles/files/{filepath}", handlers.GetByFilePath)
