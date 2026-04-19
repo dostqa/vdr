@@ -31,7 +31,7 @@ const pollRequest = async (id: number) => {
 
   while (Date.now() - start < maxTime) {
     const res = await fetch(
-      `api/audiofiles/requests/${id}`
+      `http://46.19.64.230:8080/api/audiofiles/requests/${id}`
     )
 
     console.log('Блятский респонс:', res)
@@ -77,7 +77,7 @@ const onRecorded = async (data: any) => {
     // 3. обновление UI
     transcription.value = result
     processedAudio.value =
-      `api/audio/${result.new_file_path}`
+      `http://46.19.64.230:8080/api/audio/${result.new_file_path}`
 
   } catch (e) {
     console.error('Processing error:', e)

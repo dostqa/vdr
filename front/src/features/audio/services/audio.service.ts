@@ -4,9 +4,9 @@ export async function uploadAudio(file: Blob): Promise<{ id: number }> {
   const formData = new FormData()
   formData.append('file', file)
 
-  const response = await fetch('api/audiofiles', {
+  const response = await fetch('http://46.19.64.230:8080/api/audiofiles', {
     method: 'POST',
-    body: formData
+    body: formData,
   })
 
   if (!response.ok) {
