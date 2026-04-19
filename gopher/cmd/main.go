@@ -64,7 +64,7 @@ func main() {
 
 	// router.Use(logger.NewMiddlewareLogger(log))
 	//router.Use(middleware.Recoverer)
-	router.Get("/audio/{name}", func(w http.ResponseWriter, r *http.Request) {
+	router.Get("/api/audio/{name}", func(w http.ResponseWriter, r *http.Request) {
 		name := chi.URLParam(r, "name")
 
 		// Вызываем нашу новую функцию
