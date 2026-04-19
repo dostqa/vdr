@@ -24,7 +24,7 @@ def run_worker(worker_class, bootstrap_servers):
         logging.error(f"Fatal error in {worker_class.__name__}: {e}")
 
 if __name__ == "__main__":
-    BOOTSTRAP_SERVERS = f"{kafka_host}:9092" # Или адрес из конфига
+    BOOTSTRAP_SERVERS = f"{kafka_host}:9093" # Или адрес из конфига
 
     # Список воркеров для запуска
     workers = [

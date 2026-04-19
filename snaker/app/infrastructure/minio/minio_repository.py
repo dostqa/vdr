@@ -9,7 +9,7 @@ class MinioRepo(metaclass=Singleton):
     def __init__(self, model_size="small", device="cpu", compute_type="int8"):
         logger.info("Creating Whisper Service...")
         self.client =  Minio(
-            "localhost:9000",
+            "minio:9000",
             access_key=minio_user,
             secret_key=minio_password,
             secure=False

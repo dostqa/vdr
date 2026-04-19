@@ -12,9 +12,8 @@ import (
 	"gopher/internal/storages/database"
 	"gopher/internal/storages/filestorage"
 	stdlog "log"
-
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 func main() {
@@ -40,7 +39,7 @@ func main() {
 
 	dataBase := database.NewDataBase(pool)
 
-	kafkaService := clients.NewKafkaService([]string{"localhost:9092"})
+	kafkaService := clients.NewKafkaService([]string{"broker:9093"})
 	defer kafkaService.Close()
 	saverService := service.NewSaverService(dataBase, fileStorage, kafkaService, database.NewTransactionManager(pool))
 
@@ -49,10 +48,19 @@ func main() {
 	log := logger.NewLogger(cfg.Env)
 
 	router := chi.NewRouter()
+	router.Use(cors.Handler(cors.Options{
+				// AllowedOrigins: []string{"https://foo.com"} // Для продакшена лучше указывать конкретные домены
+						AllowedOrigins:   []string{"https://*", "http://*"},
+								AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+										AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+												ExposedHeaders:   []string{"Link"},
+														AllowCredentials: true,
+																MaxAge:           300, // Кэширование префлайт-запросов в секундах
+																	}))
+	//router.Use(middleware.RequestID)
 
-	router.Use(middleware.RequestID)
 	// router.Use(logger.NewMiddlewareLogger(log))
-	router.Use(middleware.Recoverer)
+	//router.Use(middleware.Recoverer)
 
 	router.Get("/api/audiofiles/requests/{id}", handlers.GetByRequestID(log, dataBase, saverService))
 	// router.Get("/api/audiofiles/files/{filepath}", handlers.GetByFilePath)
