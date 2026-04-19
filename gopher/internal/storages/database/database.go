@@ -2,7 +2,10 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
+	"gopher/internal/clients"
 
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -79,6 +82,18 @@ func (db *DataBase) SaveFile(ctx context.Context, requestID int64, filepath stri
 	return id, nil
 }
 
+func (db *DataBase) UpdateStatus(ctx context.Context, requestID int64) error {
+	const op = "database.UpdateStatus"
+
+	_, err := db.db(ctx).Exec(ctx, `UPDATE requests SET status=true WHERE id=$1`, requestID)
+
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
 func (db *DataBase) IsRequestReady(ctx context.Context, requestID int64) (bool, error) {
 	const op = "database.IsFileProcessed"
 
@@ -95,4 +110,48 @@ func (db *DataBase) IsRequestReady(ctx context.Context, requestID int64) (bool, 
 	}
 
 	return isReady, nil
+}
+
+func (db *DataBase) HandleRequestJsonb(ctx context.Context, msg clients.OutputMessage) error {
+	jsonData, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal message: %v", err)
+	}
+
+	query := `
+        UPDATE requests
+        SET status = TRUE,
+            payload = $1
+        WHERE id = $2`
+
+	_, err = db.db(ctx).Exec(ctx, query, jsonData, msg.RequestID)
+	if err != nil {
+		return fmt.Errorf("failed to update request: %v", err)
+	}
+
+	return nil
+}
+
+func (db *DataBase) GetRequestJsonb(ctx context.Context, requestID int) (*clients.OutputMessage, error) {
+	var jsonData []byte
+
+	query := "SELECT payload FROM requests WHERE id = $1"
+	err := db.db(ctx).QueryRow(ctx, query, requestID).Scan(&jsonData)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("request %d not found", requestID)
+		}
+		return nil, err
+	}
+
+	if len(jsonData) == 0 {
+		return nil, fmt.Errorf("payload is empty for request %d", requestID)
+	}
+
+	var msg clients.OutputMessage
+	if err := json.Unmarshal(jsonData, &msg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal payload: %v", err)
+	}
+
+	return &msg, nil
 }

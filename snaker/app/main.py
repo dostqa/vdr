@@ -2,6 +2,7 @@ import multiprocessing
 import logging
 import sys
 
+from snaker.app.config import kafka_host
 from snaker.app.infrastructure.kafka.adapter.audio_adapter import AudioWorker
 from snaker.app.infrastructure.kafka.adapter.llm_adapter import LLMWorker
 from snaker.app.infrastructure.kafka.adapter.output_adapter import OutputWorker
@@ -23,7 +24,7 @@ def run_worker(worker_class, bootstrap_servers):
         logging.error(f"Fatal error in {worker_class.__name__}: {e}")
 
 if __name__ == "__main__":
-    BOOTSTRAP_SERVERS = "localhost:9092" # Или адрес из конфига
+    BOOTSTRAP_SERVERS = f"{kafka_host}:9092" # Или адрес из конфига
 
     # Список воркеров для запуска
     workers = [

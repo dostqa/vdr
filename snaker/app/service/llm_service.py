@@ -1,5 +1,5 @@
 from loguru import logger
-from ollama import Client
+from ollama import Client, chat
 
 from snaker.app.config import hf_token
 from snaker.app.domain.llm_response import LLMResponse
@@ -8,8 +8,10 @@ from snaker.app.service.singelton import Singleton
 
 class LLMService(metaclass=Singleton):
     def __init__(self, model_size="small", device="cpu", compute_type="int8"):
-        logger.info("Creating Whisper Service...")
+        logger.info("Creating LLM Service...")
+        logger.info(hf_token)
         self.client = Client(host='https://ollama.com', headers={'Authorization': 'Bearer ' + hf_token})
+        #self.client = Client()
 
     def gen(self, text: str) -> LLMResponse:
         response = self.client.chat(
@@ -27,9 +29,9 @@ class LLMService(metaclass=Singleton):
             format=LLMResponse.model_json_schema(),
             options={'temperature': 0},
         )
+        print(response.message.content)
         llm_response = LLMResponse.model_validate_json(response.message.content.strip()[7:-4])
         return llm_response
-
 
 system_prompt = \
 """

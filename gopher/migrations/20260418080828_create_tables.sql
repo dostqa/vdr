@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS requests (
     id SERIAL PRIMARY KEY,
     status BOOLEAN DEFAULT FALSE,
+    payload JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS files (
 CREATE TABLE IF NOT EXISTS pdn (
     id SERIAL PRIMARY KEY,
     file_id INTEGER REFERENCES files(id) ON DELETE CASCADE,
+    text_of_pdn TEXT,
     type_of_pdn TEXT,
     start_time REAL,
     end_time REAL

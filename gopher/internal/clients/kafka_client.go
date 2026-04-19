@@ -11,6 +11,22 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+type ObjectPdn struct {
+	Text      string  `json:"text"`       // маппинг на "text"
+	Type      string  `json:"type"`       // маппинг на "type"
+	StartTime float64 `json:"start_time"` // маппинг на "start_time"
+	EndTime   float64 `json:"end_time"`   // маппинг на "end_time"
+}
+
+// OutputMessage основная структура сообщения
+type OutputMessage struct {
+	RequestID    int         `json:"request_id"`    // маппинг на "request_id"
+	OldFilePath  string      `json:"old_file_path"` // маппинг на "old_file_path"
+	NewFilePath  string      `json:"new_file_path"` // маппинг на "new_file_path"
+	OriginalText string      `json:"original_text"` // маппинг на "original_text"
+	AnonText     string      `json:"anon_text"`     // маппинг на "anon_text"
+	ObjectsPdns  []ObjectPdn `json:"objects_pdns"`  // маппинг на "objects_pdns"
+}
 type InputMessage struct {
 	RequestID int    `json:"request_id"`
 	FilePath  string `json:"file_path"`
@@ -54,7 +70,7 @@ func (s *KafkaService) SendJSON(ctx context.Context, topic string, key string, d
 	return nil
 }
 
-func (s *KafkaService) StartConsume(ctx context.Context, topic, groupID string, handler func(kafka.Message)) {
+func (s *KafkaService) StartConsume(ctx context.Context, topic, groupID string, handler func(ctx context.Context, msg OutputMessage)) {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: s.Brokers,
 		Topic:   topic,
@@ -78,7 +94,19 @@ func (s *KafkaService) StartConsume(ctx context.Context, topic, groupID string, 
 			log.Printf("error reading from %s: %v", topic, err)
 			continue
 		}
-		handler(msg)
+
+		// 1. Создаем переменную типа нашей структуры
+		var outputMsg OutputMessage
+
+		// 2. Распаковываем JSON из тела сообщения Kafka (msg.Value)
+		if err := json.Unmarshal(msg.Value, &outputMsg); err != nil {
+			log.Printf("could not decode message: %v", err)
+			// Важно: решаем, пропускать ли битое сообщение или падать
+			continue
+		}
+
+		// 3. Передаем уже готовую структуру в обработчик
+		handler(ctx, outputMsg)
 	}
 }
 

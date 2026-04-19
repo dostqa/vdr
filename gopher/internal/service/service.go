@@ -7,8 +7,6 @@ import (
 	"gopher/internal/models"
 	"io"
 	"strconv"
-
-	"github.com/segmentio/kafka-go"
 )
 
 type TransactionManager interface {
@@ -18,6 +16,8 @@ type TransactionManager interface {
 type MetaDataBase interface {
 	SaveRequest(context.Context) (int64, error)
 	SaveFile(context.Context, int64, string) (int64, error)
+	HandleRequestJsonb(ctx context.Context, msg clients.OutputMessage) error
+	GetRequestJsonb(ctx context.Context, requestID int) (*clients.OutputMessage, error)
 }
 
 type FileStorage interface {
@@ -26,7 +26,7 @@ type FileStorage interface {
 
 type KafkaService interface {
 	SendJSON(ctx context.Context, topic string, key string, data interface{}) error
-	StartConsume(ctx context.Context, topic, groupID string, handler func(kafka.Message))
+	StartConsume(context.Context, string, string, func(context.Context, clients.OutputMessage))
 }
 
 type SaverService struct {
@@ -45,9 +45,9 @@ func NewSaverService(metaDataBase MetaDataBase, fileStorage FileStorage, kafkaSe
 	}
 }
 
-func (s *SaverService) Save(ctx context.Context, file models.File, r io.Reader, size int64) error {
+func (s *SaverService) Save(ctx context.Context, file models.File, r io.Reader, size int64) (int, error) {
 	const op = "service.Save"
-
+	var id int
 	err := s.trm.Run(ctx, func(ctx context.Context) error {
 		// 1. Сохраняем нужную информацию
 		// 1.1 Сохраняем request
@@ -55,6 +55,7 @@ func (s *SaverService) Save(ctx context.Context, file models.File, r io.Reader, 
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
+		id = int(requestID)
 
 		// 1.2 Сохраняем файл в S3 хранилище
 		file.FileName = strconv.FormatInt(requestID, 10) + "_" + file.FileName
@@ -81,6 +82,17 @@ func (s *SaverService) Save(ctx context.Context, file models.File, r io.Reader, 
 		}
 		return nil
 	})
+	if err != nil {
+		return -1, err
+	}
 
-	return err
+	return id, nil
+}
+
+func (s *SaverService) Consume(ctx context.Context, msg clients.OutputMessage) {
+	s.MetaDataBase.HandleRequestJsonb(ctx, msg)
+}
+
+func (s *SaverService) GetRequestJson(ctx context.Context, requestID int) (*clients.OutputMessage, error) {
+	return s.MetaDataBase.GetRequestJsonb(ctx, requestID)
 }

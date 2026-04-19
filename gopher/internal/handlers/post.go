@@ -16,7 +16,7 @@ import (
 const maxUploadSize = 10 << 20 // 10 MB
 
 type SaverService interface {
-	Save(context.Context, models.File, io.Reader, int64) error
+	Save(ctx context.Context, file models.File, r io.Reader, size int64) (int, error)
 }
 
 type MetaDataSaver interface {
@@ -62,7 +62,7 @@ func Post(logger *slog.Logger, saverService SaverService) http.HandlerFunc {
 		}
 		defer file.Close()
 
-		err = saverService.Save(
+		idx, err := saverService.Save(
 			r.Context(),
 			models.File{FileName: header.Filename},
 			file,
@@ -78,6 +78,6 @@ func Post(logger *slog.Logger, saverService SaverService) http.HandlerFunc {
 
 		log.Info("file saved successfully")
 		render.Status(r, http.StatusCreated)
-		render.JSON(w, r, newOK())
+		render.JSON(w, r, RequestIdReponse{Id: idx})
 	}
 }
