@@ -11,16 +11,41 @@ const props = defineProps<{
 
 const showOriginal = ref(false)
 
+const emit = defineEmits(['seek'])
+
+const handleClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+
+  if (target.classList.contains('mask')) {
+    const index = target.dataset.index
+    if (!props.data || index === undefined) return
+
+    const obj = props.data.objects_pdns[Number(index)]
+  }
+}
+
 /**
  * Подсветка [TYPE] в anon тексте
  */
 const highlightedAnonText = computed(() => {
   if (!props.data) return ''
 
-  return props.data.anon_text.replace(
-    /\[(.*?)\]/g,
-    '<span class="mask">[$1]</span>'
-  )
+  let text = props.data.anon_text
+
+  props.data.objects_pdns.forEach((obj, index) => {
+    const placeholder = `[${obj.type}]`
+
+    text = text.replace(
+      placeholder,
+      `<span 
+        class="mask"
+        data-index="${index}"
+        title="${obj.text}"
+      >${placeholder}</span>`
+    )
+  })
+
+  return text
 })
 
 const toggle = () => {
@@ -29,7 +54,9 @@ const toggle = () => {
 </script>
 
 <template>
-    <p class="anotation">Транскрипция</p>
+
+        <div class="info-row"><p class="anotation">Транскрипция</p></div>
+    
   <div class="text-block">
     <div class="header">
 
@@ -39,22 +66,20 @@ const toggle = () => {
     </div>
 
     <div class="text-content">
-      <!-- если нет данных -->
-      <div v-if="!data" class="empty">
-        нет данных
-      </div>
+  <div v-if="!data" class="empty">
+    нет данных
+  </div>
 
-      <!-- анонимный -->
-      <div
-        v-else-if="!showOriginal"
-        v-html="highlightedAnonText"
-      />
+  <div
+    v-else-if="!showOriginal"
+    v-html="highlightedAnonText"
+    @click="handleClick"
+  ></div>
 
-      <!-- оригинал -->
-      <div v-else>
-        {{ data.original_text }}
-      </div>
-    </div>
+  <div v-else>
+    {{ data.original_text }}
+  </div>
+</div>
   </div>
 </template>
 

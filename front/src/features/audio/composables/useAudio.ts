@@ -3,6 +3,7 @@ import { ref } from 'vue'
 export function useAudio() {
   const audioUrl = ref<string | null>(null)
   const isRecording = ref(false)
+  const audioBlob = ref<Blob | null>(null)
 
   let mediaRecorder: MediaRecorder | null = null
   let chunks: Blob[] = []
@@ -28,6 +29,7 @@ export function useAudio() {
         if (audioUrl.value) {
           URL.revokeObjectURL(audioUrl.value)
         }
+        audioBlob.value = blob
         audioUrl.value = URL.createObjectURL(blob)
         
         if (stream) {
@@ -55,6 +57,7 @@ export function useAudio() {
     audioUrl,
     isRecording,
     startRecording,
-    stopRecording
+    stopRecording,
+    audioBlob
   }
 }

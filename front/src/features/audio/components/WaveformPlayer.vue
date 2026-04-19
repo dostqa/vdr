@@ -15,6 +15,22 @@ let wave: WaveSurfer | null = null
 
 const isPlaying = ref(false)
 
+const currentTime = ref(0)
+const duration = ref(0)
+
+const formatTime = (sec: number) => {
+  const m = Math.floor(sec / 60)
+  const s = Math.floor(sec % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+const seekToTime = (time: number) => {
+  if (!wave) return
+
+  const duration = wave.getDuration()
+  wave.seekTo(time / duration)
+}
+
 onMounted(() => {
   if (!container.value) return
 
@@ -45,6 +61,19 @@ onMounted(() => {
   wave.on('pause', () => {
     isPlaying.value = false
   })
+
+  wave.on('ready', () => {
+  duration.value = wave?.getDuration() || 0
+  currentTime.value = wave?.getCurrentTime() || 0
+})
+
+wave.on('audioprocess', () => {
+  currentTime.value = wave?.getCurrentTime() || 0
+})
+
+wave.on('interaction', () => {
+  currentTime.value = wave?.getCurrentTime() || 0
+})
 })
 
 watch(() => props.audioUrl, (url) => {
@@ -61,6 +90,10 @@ const playPause = () => {
 
 defineExpose({
   playPause,
-  isPlaying
+  isPlaying,
+  currentTime,
+  duration,
+  formatTime,
+  seekToTime
 })
 </script>
