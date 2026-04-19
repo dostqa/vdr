@@ -1,21 +1,21 @@
 services:
- web:
-   build: ./front
-   ports:
-     - 8088:8080
+  web:
+    build: ./front
+    ports:
+      - 8088:8080
 
- gopher:
-   build: ./gopher
-   container_name: 3dom-ghoper
-   depends_on:
-     - db
-   ports:
-     - 8080:8079
+  gopher:
+    build: ./gopher
+    container_name: 3dom-ghoper
+    depends_on:
+      - db
+    ports:
+      - 8080:8079
 
- snaker:
-   build: ./snaker
-   depends_on:
-     - broker
+  snaker:
+    build: ./snaker
+    depends_on:
+      - broker
 
   minio:
     image: minio/minio
