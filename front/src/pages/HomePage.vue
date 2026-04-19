@@ -31,7 +31,7 @@ const pollRequest = async (id: number) => {
 
   while (Date.now() - start < maxTime) {
     const res = await fetch(
-      `audiofiles/requests/${id}`
+      `api/audiofiles/requests/${id}`
     )
 
     if (res.ok) {
@@ -75,7 +75,7 @@ const onRecorded = async (data: any) => {
     // 3. обновление UI
     transcription.value = result
     processedAudio.value =
-      `audio/${result.new_file_path}`
+      `api/audio/${result.new_file_path}`
 
   } catch (e) {
     console.error('Processing error:', e)
