@@ -1,21 +1,21 @@
 services:
-  web:
-    build: ./front
-    ports:
-      - 8088:8080
-
-  gopher:
-    build: ./gopher
-    container_name: 3dom-ghoper
-    depends_on:
-      - db
-    ports:
-      - 8080:8079
-
-  snaker:
-    build: ./snaker
-    depends_on:
-      - broker
+#  web:
+#    build: ./front
+#    ports:
+#      - 8088:8080
+#
+#  gopher:
+#    build: ./gopher
+#    container_name: 3dom-ghoper
+#    depends_on:
+#      - db
+#    ports:
+#      - 8080:8079
+#
+#  snaker:
+#    build: ./snaker
+#    depends_on:
+#      - broker
 
   minio:
     image: minio/minio
@@ -114,6 +114,7 @@ services:
       echo 'Creating topics...'
       kafka-topics --bootstrap-server broker:9093 --create --if-not-exists --topic input_topic --partitions 1 --replication-factor 1
       kafka-topics --bootstrap-server broker:9093 --create --if-not-exists --topic stt_topic --partitions 1 --replication-factor 1
+      kafka-topics --bootstrap-server broker:9093 --create --if-not-exists --topic check_topic --partitions 1 --replication-factor 1
       kafka-topics --bootstrap-server broker:9093 --create --if-not-exists --topic llm_topic --partitions 1 --replication-factor 1
       kafka-topics --bootstrap-server broker:9093 --create --if-not-exists --topic times_topic --partitions 1 --replication-factor 1
       kafka-topics --bootstrap-server broker:9093 --create --if-not-exists --topic audio_topic --partitions 1 --replication-factor 1

@@ -9,7 +9,7 @@ class LLMWorker(BaseKafkaWorker[STTMessage, LLMMessage]):
         super().__init__(
             bootstrap_servers=bootstrap_servers,
             group_id="stt_service_group",
-            in_topic="stt_topic",
+            in_topic="check_topic",
             out_topic="llm_topic",
             in_model=STTMessage
         )

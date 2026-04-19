@@ -1,7 +1,7 @@
 from loguru import logger
 from minio import Minio
 
-from snaker.app.config import minio_user, minio_password
+from snaker.app.config import minio_user, minio_password, minio_address
 from snaker.app.infrastructure.minio.singelton import Singleton
 
 
@@ -9,7 +9,7 @@ class MinioRepo(metaclass=Singleton):
     def __init__(self, model_size="small", device="cpu", compute_type="int8"):
         logger.info("Creating Whisper Service...")
         self.client =  Minio(
-            "minio:9000",
+            minio_address,
             access_key=minio_user,
             secret_key=minio_password,
             secure=False
