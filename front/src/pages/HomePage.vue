@@ -34,6 +34,8 @@ const pollRequest = async (id: number) => {
       `api/audiofiles/requests/${id}`
     )
 
+    console.log('Блятский респонс:', res)
+
     if (res.ok) {
       // если бек уже отдал готовый json
       const text = await res.text()
@@ -95,12 +97,11 @@ const onRecorded = async (data: any) => {
       <AudioRecorder @recorded="onRecorded" />
 
       <div v-if="loading" class="loader-overlay">
-  <div class="loader-card">
-    <div class="spinner"></div>
-    <p>Обрабатываем аудио...</p>
-    <span class="sub">это может занять несколько секунд</span>
-  </div>
-</div>
+        <div class="loader-card">
+          <div class="spinner"></div>
+          <p class="dwnloadanotation">Обрабатываем аудио</p>
+        </div>
+      </div>
 
       <ProcessedAudioBlock
         ref="processedWaveRef"

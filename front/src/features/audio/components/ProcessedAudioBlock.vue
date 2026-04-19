@@ -10,6 +10,15 @@ import downloadIcon from '/src/assets/icons/download.png'
 const currentTime = ref(0)
 const duration = ref(0)
 
+const TYPE_COLORS: Record<string, string> = {
+  PASSPORT: 'rgba(255, 99, 132, 0.3)',
+  INN: 'rgba(54, 162, 235, 0.3)',
+  PHONE: 'rgba(75, 192, 192, 0.3)',
+  EMAIL: 'rgba(153, 102, 255, 0.3)',
+  ADDRESS: 'rgba(255, 206, 86, 0.3)',
+  SNILS: 'rgba(255, 159, 64, 0.3)'
+}
+
 const formatTime = (sec: number) => {
   const m = Math.floor(sec / 60)
   const s = Math.floor(sec % 60)
@@ -21,6 +30,7 @@ const props = defineProps<{
   objects?: {
     start_time: number
     end_time: number
+    type: string
   }[]
 }>()
 
@@ -106,7 +116,7 @@ const addRegions = () => {
     regions.addRegion({
       start: obj.start_time,
       end: obj.end_time,
-      color: 'rgba(0,255,0,0.2)',
+      color: TYPE_COLORS[obj.type] || 'rgba(0,255,0,0.2)', // fallback
       drag: false,
       resize: false
     })
