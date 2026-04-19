@@ -1,6 +1,11 @@
 <template>
   <div>
-    <p class="anotation">Исходный</p>
+
+  <div class="info-row">
+  <p class="anotation">Исходный</p>
+  <span class="anotation">{{ timeDisplay }}</span>
+</div>
+
     <div class="audio-block">
       <button 
         class="control-btn play-btn" 
@@ -76,6 +81,23 @@ import downloadIcon from '/src/assets/icons/download.png'
 
 import { watch } from 'vue'
 
+import { computed } from 'vue'
+
+const timeDisplay = computed(() => {
+  if (!waveRef.value) return '0:00 / 0:00'
+
+  const current = waveRef.value.currentTime || 0
+  const total = waveRef.value.duration || 0
+
+  const format = (s: number) => {
+    const m = Math.floor(s / 60)
+    const sec = Math.floor(s % 60)
+    return `${m}:${sec.toString().padStart(2, '0')}`
+  }
+
+  return `${format(current)} / ${format(total)}`
+})
+
 const emit = defineEmits(['recorded'])
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -89,8 +111,15 @@ const onFileChange = (e: Event) => {
   if (file) {
     const url = URL.createObjectURL(file)
     audioUrl.value = url
+
+    emit('recorded', {
+      url,
+      blob: file
+    })
   }
 }
+
+
 
 const downloadAudio = () => {
   if (!audioUrl.value) return
@@ -102,14 +131,18 @@ const downloadAudio = () => {
 
 const {
   audioUrl,
+  audioBlob,
   isRecording,
   startRecording,
   stopRecording
 } = useAudio()
 
 watch(audioUrl, (val) => {
-  if (val) {
-    emit('recorded', val)
+  if (val && audioBlob.value) {
+    emit('recorded', {
+      url: val,
+      blob: audioBlob.value
+    })
   }
 })
 

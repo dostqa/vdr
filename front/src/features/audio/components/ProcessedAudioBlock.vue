@@ -7,6 +7,15 @@ import playIcon from '/src/assets/icons/play.png'
 import pauseIcon from '/src/assets/icons/pause.png'
 import downloadIcon from '/src/assets/icons/download.png'
 
+const currentTime = ref(0)
+const duration = ref(0)
+
+const formatTime = (sec: number) => {
+  const m = Math.floor(sec / 60)
+  const s = Math.floor(sec % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
 const props = defineProps<{
   audioUrl: string | null
   objects?: {
@@ -20,6 +29,17 @@ let wave: WaveSurfer | null = null
 let regions: any = null
 
 const isPlaying = ref(false)
+
+const seekToTime = (time: number) => {
+  if (!wave) return
+
+  const duration = wave.getDuration()
+  wave.seekTo(time / duration)
+}
+
+defineExpose({
+  seekToTime
+})
 
 onMounted(() => {
   if (!container.value) return
@@ -48,6 +68,18 @@ onMounted(() => {
   wave.on('finish', () => {
     isPlaying.value = false
   })
+
+  wave.on('ready', () => {
+  duration.value = wave?.getDuration() || 0
+})
+
+wave.on('audioprocess', () => {
+  currentTime.value = wave?.getCurrentTime() || 0
+})
+
+wave.on('interaction', () => {
+  currentTime.value = wave?.getCurrentTime() || 0
+})
 })
 
 watch(
@@ -56,6 +88,14 @@ watch(
     addRegions()
   }
 )
+
+watch(() => props.audioUrl, (url) => {
+  if (wave && url) {
+    wave.load(url)
+    currentTime.value = 0
+    duration.value = 0
+  }
+})
 
 const addRegions = () => {
   if (!regions || !props.objects) return
@@ -91,7 +131,10 @@ const downloadAudio = () => {
 
 <template>
     
-    <p class="anotation">Анонимный</p>
+    <div class="info-row">
+  <p class="anotation">Анонимный</p>
+  <span class="anotation">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</span>
+</div>
   <div class="audio-block">
     <!-- play -->
     <button class="control-btn" @click="togglePlay" :disabled="!audioUrl">

@@ -67,14 +67,21 @@
 }
 
 .anotation {
-    margin-left: 100px;
    text-align: left;
-  width: 100%;
   font-size: 14px;
   color: var(--text-primary);
   margin-bottom: 8px;
   letter-spacing: -0.5px;
   font-family: system-ui, -apple-system, 'Inter', sans-serif;
+}
+
+.info-row {
+  display: flex;
+  margin: 0 8%;
+  align-items: center;
+  gap: 20px;
+  justify-content: space-between;
+  margin-top: 25px;
 }
 
 /* ========== Аудио блок ========== */
@@ -173,6 +180,45 @@
   }
 }
 
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.loader-card {
+  background: white;
+  border: 1px solid #eee;
+  padding: 24px 28px;
+  border-radius: 14px;
+  text-align: center;
+  min-width: 220px;
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  animation: spin 1s linear infinite;
+}
+
+.sub {
+  font-size: 12px;
+  color: #888;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ========== Адаптивность ========== */
 @media (max-width: 640px) {
   .audio-block {
@@ -212,6 +258,6 @@
   }
   
   .mic-btn {
-    order: 2;
+    order: 0;
   }
 }
