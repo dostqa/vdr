@@ -25,7 +25,7 @@ import (
 )
 
 func RunApp() {
-	config := config.MustLoad("config.yaml")
+	config := config.MustLoad("config_docker.yaml")
 	printBanner("1.0.0", config.HTTPServer.Address)
 	setupLogger(config.Env)
 
