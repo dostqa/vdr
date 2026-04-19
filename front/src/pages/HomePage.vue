@@ -31,7 +31,7 @@ const pollRequest = async (id: number) => {
 
   while (Date.now() - start < maxTime) {
     const res = await fetch(
-      `http://85.239.55.254:8080/api/audiofiles/requests/${id}`
+      `http://3dom-ghoper:8080/api/audiofiles/requests/${id}`
     )
 
     if (res.ok) {
@@ -75,7 +75,7 @@ const onRecorded = async (data: any) => {
     // 3. обновление UI
     transcription.value = result
     processedAudio.value =
-      `http://85.239.55.254:8080/audio/${result.new_file_path}`
+      `http://3dom-ghoper:8080/audio/${result.new_file_path}`
 
   } catch (e) {
     console.error('Processing error:', e)
